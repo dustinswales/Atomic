@@ -11,7 +11,7 @@ import os.path
 from os import path
 
 def daterange(start_date, end_date):
-    for n in range(int ((end_date - start_date).days)):
+    for n in range(int ((end_date - start_date).days+1)):
         yield start_date + timedelta(n)
         
 ##########################################################################################
@@ -30,9 +30,12 @@ configID = '2km_01min'
 dirLocal = '/Projects/ATOMIC/data/clavrx/'
 
 # What date range to import?
-start_date = date(2020, 1, 21)
-end_date   = date(2020, 2, 14)
-countDOY   = 21
+start_date = date(2020, 1, 24)
+end_date   = date(2020, 1, 26)
+
+# Compute day-of-year, used in filenaming convention.
+deltaDays = start_date - date(start_date.year,1,1)
+countDOY  = deltaDays.days + 1
 
 ##########################################################################################
 # Import data
@@ -55,7 +58,8 @@ for single_date in daterange(start_date, end_date):
     # Is the data we requested on the server?
     try:
         ftp.cwd(dirFTP+configID+'/'+NewTempDir+'/')
-        os.mkdir(dirLocal+configID+'/'+NewTempDir+'/')
+        if not (os.path.exists(dirLocal+configID+'/'+NewTempDir+'/')):
+            os.mkdir(dirLocal+configID+'/'+NewTempDir+'/')
         os.chdir(dirLocal+configID+'/'+NewTempDir+'/')
         ls = ftp.nlst()
         count = len(ls)
