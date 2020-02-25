@@ -166,16 +166,18 @@ for iTime in range(fileiI,fileiF+1):
                 print("      Pixels exceeding threshold increased by "+str(dcfp*100.)+\
                       "% , from "+str(cfp[count-1])+" to "+str(cfp[count])+" pixels")
                 if (mkplot):
-                    levels = np.linspace(0, 15000, 1000)
+                    levels = np.arange(0, 15000, 1000)
                     fig = plt.figure(figsize=(10, 8))                
                     ax1 = fig.add_subplot(2,1,1)
                     s1 = ax1.contourf(lon, lat, cld_hgt2d[:,:,0], levels, cmap='YlGnBu')
                     ax1.set(title=t1, ylabel='latitude')
-                    fig.colorbar(s1, ax=ax1, shrink=0.9)                    
+                    clb1 = fig.colorbar(s1, ax=ax1, shrink=0.9)
+                    clb1.set_label('cloud-top height (m)') 
                     ax2 = fig.add_subplot(2,1,2)        
                     s2 = ax2.contourf(lon, lat, cld_hgt2d[:,:,1], levels, cmap='YlGnBu')
                     ax2.set(title=t2, ylabel='latitude',xlabel='longitude')
-                    fig.colorbar(s2, ax=ax2, shrink=0.9)                
+                    clb2 = fig.colorbar(s2, ax=ax2, shrink=0.9)
+                    clb2.set_label('cloud-top height (m)') 
                     plt.show()
                     
 
