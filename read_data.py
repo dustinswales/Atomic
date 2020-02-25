@@ -1,10 +1,8 @@
 ##########################################################################################
 #
 ##########################################################################################
-#from matplotlib import pyplot as plt
 import os,netCDF4,numpy as np
 import datetime
-from ftplib import FTP
 
 def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)+1):
@@ -17,12 +15,12 @@ debug     = 1
 storeData = 0
 
 # Data location
-dirData = '/Projects/ATOMIC/data/clavrx/2km_01min/'
-#dirData = 'http://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clavrx/2km_01min/'
+#dirData = '/Projects/ATOMIC/data/clavrx/2km_01min/'
+dirData = 'https://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clavrx/2km_01min/'
 
-# What data to read in? [yyyy,mm,dd,hh,mm]
-t_start = [2020,01,18,13,51]
-t_stop  = [2020,01,18,13,55]
+# What data to read in? [year,month,day,hour,minute]
+t_start = [2020,1,18,13,55]
+t_stop  = [2020,1,22,0,3]
 
 # Subset the domain? [lon1,lat1,lon2,lat2]
 sub_extent = [-59,14,-55,17]
@@ -104,8 +102,8 @@ init        = 1
 countRecord = 0
 for iFile in range(fileiI,fileiF+1):
 
-    if (os.path.exists(fileList[iFile])):
-    
+    # Only read in file if it exists.
+    try:
         # Open file
         dataIN = netCDF4.Dataset(fileList[iFile],'r')
         time   = dataIN.variables['scan_line_time'][:]
@@ -187,7 +185,7 @@ for iFile in range(fileiI,fileiF+1):
         # Increment counter
         countRecord = countRecord + 1
          
-    else:
+    except:
         # If not, squack
         print('Missing day: '+fileList[iFile]+' does not exist')
         
