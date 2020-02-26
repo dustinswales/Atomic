@@ -14,9 +14,6 @@ def daterange(start_date, end_date):
 # Configuration
 ##########################################################################################
 
-# Set to true to print information on the files begin read in.
-debug  = 0
-
 # Set true to make plots cloud-fraction when "hot-towers" are detected.
 mkplot = 1
 
@@ -37,7 +34,6 @@ sub_extent = [-60,15,-58,17]
 cld_hgt_thresh   = 6000.
 # Relative change in pixels containing high-clouds.
 changeInPixCount = 0.5
-
 
 ##########################################################################################
 # Determine problem size...
@@ -110,10 +106,11 @@ fileiF = fileList.index(fnameF)
 init  = 1
 count = 0
 for iTime in range(fileiI,fileiF+1):
-    [cld_hgt, cld_mask, lon, lat, error] = read_data.read_data(fileList[iTime], sub_extent)
+    [cld_hgt, cld_temp, cld_pres, lon, lat, error] = \
+        read_data.read_data(fileList[iTime], sub_extent)
     if not (error):        
-        if (debug): print('      Reading in '+fileList[iTime])
-
+        print('      Reading in '+fileList[iTime])
+        
         # What fraction of the domain is covered in high clouds?
         mask1 = np.where(cld_hgt >= cld_hgt_thresh,1,0)
         cfp0  = np.sum(mask1)
@@ -147,9 +144,12 @@ for iTime in range(fileiI,fileiF+1):
             hour   = np.vstack((hour,   hour0))
             minute = np.vstack((minute, minute0))
             cfp    = np.vstack((cfp,    cfp0))
-            cld_hgt2d = np.dstack((cld_hgtm1t,cld_hgt))
-        cld_hgtm1t = cld_hgt
-
+            cld_hgt2d  = np.dstack((cld_hgtm1t,cld_hgt))
+            cld_temp2d = np.dstack((cld_tempm1t,cld_temp))
+            cld_pres2d = np.dstack((cld_presm1t,cld_pres))
+        cld_hgtm1t  = cld_hgt
+        cld_tempm1t = cld_temp
+        cld_presm1t = cld_pres
 
         # If number of pixels jumps drastically, say 20%?, from subsequent timesteps, make plot
         if (count > 0):
@@ -166,24 +166,51 @@ for iTime in range(fileiI,fileiF+1):
                 print("      Pixels exceeding threshold increased by "+str(dcfp*100.)+\
                       "% , from "+str(cfp[count-1])+" to "+str(cfp[count])+" pixels")
                 if (mkplot):
-                    levels = np.arange(0, 15000, 1000)
-                    fig = plt.figure(figsize=(10, 8))                
-                    ax1 = fig.add_subplot(2,1,1)
-                    s1 = ax1.contourf(lon, lat, cld_hgt2d[:,:,0], levels, cmap='YlGnBu')
+                    # Cloud-top height
+                    levels = np.arange(0, 15, 1)
+                    fig = plt.figure(figsize=(11, 7))                
+                    ax1 = fig.add_subplot(2,3,1)
+                    s1 = ax1.contourf(lon, lat, cld_hgt2d[:,:,0]/1000., levels, cmap='YlGnBu')
                     ax1.set(title=t1, ylabel='latitude')
                     clb1 = fig.colorbar(s1, ax=ax1, shrink=0.9)
-                    clb1.set_label('cloud-top height (m)') 
-                    ax2 = fig.add_subplot(2,1,2)        
-                    s2 = ax2.contourf(lon, lat, cld_hgt2d[:,:,1], levels, cmap='YlGnBu')
+                    clb1.set_label('(km)') 
+                    ax2 = fig.add_subplot(2,3,4)        
+                    s2 = ax2.contourf(lon, lat, cld_hgt2d[:,:,1]/1000., levels, cmap='YlGnBu')
                     ax2.set(title=t2, ylabel='latitude',xlabel='longitude')
                     clb2 = fig.colorbar(s2, ax=ax2, shrink=0.9)
-                    clb2.set_label('cloud-top height (m)') 
-                    plt.show()
+                    clb2.set_label('(km)')
                     
+                    # Cloud-top temperature
+                    levelsT = np.arange(200, 300, 2)
+                    ax3 = fig.add_subplot(2,3,2)        
+                    s3 = ax3.contourf(lon, lat, cld_temp2d[:,:,0], levelsT, cmap='YlGnBu')
+                    ax3.set(title=t1, yticklabels=[])
+                    clb3 = fig.colorbar(s3, ax=ax3, shrink=0.9)
+                    clb3.set_label('(K)')
+                    ax4 = fig.add_subplot(2,3,5)        
+                    s4 = ax4.contourf(lon, lat, cld_temp2d[:,:,1], levelsT, cmap='YlGnBu')
+                    ax4.set(title=t2, xlabel='longitude', yticklabels=[])
+                    clb4 = fig.colorbar(s4, ax=ax4, shrink=0.9)
+                    clb4.set_label('(K)')
+
+                    # Cloud-top pressure
+                    levelsP = np.arange(100, 1100, 50)
+                    ax5 = fig.add_subplot(2,3,3)        
+                    s5 = ax5.contourf(lon, lat, cld_pres2d[:,:,0], levelsP, cmap='YlGnBu')
+                    ax5.set(title=t1, yticklabels=[])
+                    clb5 = fig.colorbar(s5, ax=ax5, shrink=0.9)
+                    clb5.set_label('(hPa)')
+                    ax6 = fig.add_subplot(2,3,6)        
+                    s6 = ax6.contourf(lon, lat, cld_pres2d[:,:,1], levelsP, cmap='YlGnBu')
+                    ax6.set(title=t2, xlabel='longitude', yticklabels=[])
+                    clb6 = fig.colorbar(s6, ax=ax6, shrink=0.9)
+                    clb6.set_label('(hPa)')
+                    
+                    #
+                    plt.show()                    
 
         # Increment counter
         count = count + 1
     else:
         # If not, squack
-        if (debug): print('      Missing day: '+fileList[iTime]+' does not exist')
-
+        print('      Missing day: '+fileList[iTime]+' does not exist')

@@ -15,10 +15,10 @@ def daterange(start_date, end_date):
 # Animation function
 ##########################################################################################
 def animate(i): 
-    z = cld_hgt2d[:,:,i]
-    cont = plt.contourf(lon, lat, z, levels, cmap='YlGnBu')
-    t1 = datetime.datetime(year[i],month[i],day[i],\
-                           hour[i],minute[i])
+    ax.collections = [] 
+    cont = plt.contourf(lon, lat, cld_hgt2d[:,:,i], levels, cmap='YlGnBu')
+    t1   = datetime.datetime(year[i],month[i],day[i],\
+                             hour[i],minute[i])
     ax.set(title=t1, ylabel='latitude',xlabel='longitude')
     return cont
 
@@ -122,7 +122,7 @@ fileiF = fileList.index(fnameF)
 init  = 1
 count = 0
 for iTime in range(fileiI,fileiF+1):
-    [cld_hgt, cld_mask, lon, lat, error] = read_data.read_data(fileList[iTime], sub_extent)
+    [cld_hgt, cld_temp, cld_pres, lon, lat, error] = read_data.read_data(fileList[iTime], sub_extent)
     if not (error):        
         print('      Reading in '+fileList[iTime])
 
@@ -166,6 +166,6 @@ for iTime in range(fileiI,fileiF+1):
 # Make plot
 fig = plt.figure()
 ax  = plt.axes()
-anim = animation.FuncAnimation(fig, animate, frames=count-1)
+anim = animation.FuncAnimation(fig, animate,  frames=count-1)
 writer = animation.writers['ffmpeg'](fps=1)
-anim.save(fileOUT+'.mp4',writer=writer,dpi=100)
+anim.save(fileOUT+'.mp4',writer=writer,dpi=512)

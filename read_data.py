@@ -47,15 +47,20 @@ def read_data(fileIN, sub_extent):
         lat  = lat[xi0:xi1,yi0:yi1]
             
         # Read in fields
-        var      = dataIN.variables['cloud_mask']
-        cld_mask = dataIN.variables['cloud_mask'][xi0:xi1,yi0:yi1]        
+        var      = dataIN.variables['cld_temp_acha']
+        cld_temp = dataIN.variables['cld_temp_acha'][xi0:xi1,yi0:yi1]        
         var      = dataIN.variables['cld_height_acha']
         cld_hgt  = dataIN.variables['cld_height_acha'][xi0:xi1,yi0:yi1]
+        var      = dataIN.variables['cld_press_acha']
+        cld_pres = dataIN.variables['cld_press_acha'][xi0:xi1,yi0:yi1]
         error    = 0
     except:
+        cld_hgt  = 0
+        cld_temp = 0
+        cld_pres = 0
         error    = 1
     
-    return cld_hgt,cld_mask,lon,lat,error
+    return cld_hgt,cld_temp,cld_pres,lon,lat,error
         
         
 # Check to see if this file is being executed as the "Main" python
