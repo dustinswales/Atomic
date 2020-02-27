@@ -16,17 +16,23 @@ def daterange(start_date, end_date):
 ##########################################################################################
 def animate(i):
     ax.collections = [] 
-    cont = plt.contourf(lon, lat, cld_hgt2d[:,:,i]/1000., levels, cmap='YlGnBu')
+    if (plt_cldht): cont = plt.contourf(lon, lat, cld_hgt2d[:,:,i]/1000.,  levels, cmap='YlGnBu')
+    if (plt_lwbt):  cont = plt.contourf(lon, lat, lw_clrCh2d[:,:,i], levelsT, cmap='YlGnBu')
     t1   = datetime.datetime(year[i],month[i],day[i],\
                              hour[i],minute[i])
     ax.set(title=t1, ylabel='latitude',xlabel='longitude')
     return cont
 
-levels = np.arange(0, 15, 1)
+levels  = np.arange(0, 15, 1)
+levelsT = np.arange(150, 340, 10)
 
 ##########################################################################################
 # Configuration
 ##########################################################################################
+plt_cldht = 0
+plt_lwbt  = 1
+if (plt_cldht): varName = 'cld_height'
+if (plt_lwbt):  varName = 'longwave_bt'
 
 # Data location (OpenDap)
 dirData = 'https://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clavrx/2km_01min/'
@@ -40,7 +46,7 @@ sub_extent = [-60,15,-58,17]
 #sub_extent = [] #Using the full domain.
 
 # Name for output movie
-fileOUT = 'hot_towers'       + '_'+ \
+fileOUT = 'hot_towers'       + '_'+ varName + '_' + \
     str(t_start[0]).zfill(4) + \
     str(t_start[1]).zfill(2) + \
     str(t_start[2]).zfill(2) + \
@@ -122,7 +128,7 @@ fileiF = fileList.index(fnameF)
 init  = 1
 count = 0
 for iTime in range(fileiI,fileiF+1):
-    [cld_hgt, cld_temp, cld_pres, lon, lat, error] = read_data.read_data(fileList[iTime], sub_extent)
+    [cld_hgt, cld_temp, cld_pres, lw_clrCh, lon, lat, error] = read_data.read_data(fileList[iTime], sub_extent)
     if not (error):        
         print('      Reading in '+fileList[iTime])
 
@@ -146,17 +152,21 @@ for iTime in range(fileiI,fileiF+1):
             day       = day0
             hour      = hour0
             minute    = minute0
-            cld_hgt2d = np.dstack((cld_hgt,cld_hgt))
-            init      = 0            
+            cld_hgt2d  = np.dstack((cld_hgt,cld_hgt))
+            lw_clrCh2d = np.dstack((lw_clrCh,lw_clrCh))
+            init       = 0            
         else:
             year   = np.vstack((year,   year0))
             month  = np.vstack((month,  month0))
             day    = np.vstack((day,    day0))
             hour   = np.vstack((hour,   hour0))
             minute = np.vstack((minute, minute0))
-            if (count == 1): cld_hgt2d[:,:,1] = cld_hgt
-            if (count > 1):  cld_hgt2d = np.append(cld_hgt2d,  np.atleast_3d(cld_hgt), axis=2)
-
+            if (count == 1):
+                cld_hgt2d[:,:,1]  = cld_hgt
+                lw_clrCh2d[:,:,1] = lw_clrCh
+            if (count > 1):
+                cld_hgt2d  = np.append(cld_hgt2d,  np.atleast_3d(cld_hgt),  axis=2)
+                lw_clrCh2d = np.append(lw_clrCh2d, np.atleast_3d(lw_clrCh), axis=2)
         # Increment counter
         count = count + 1
     else:
@@ -166,9 +176,11 @@ for iTime in range(fileiI,fileiF+1):
 # Make plot
 fig  = plt.figure()
 ax   = plt.axes()
-cont = plt.contourf(lon, lat, cld_hgt2d[:,:,0], levels, cmap='YlGnBu')
+if (plt_cldht): cont = plt.contourf(lon, lat, cld_hgt2d[:,:,0],  levels, cmap='YlGnBu')
+if (plt_lwbt):  cont = plt.contourf(lon, lat, lw_clrCh2d[:,:,0], levelsT, cmap='YlGnBu')
 clb  = fig.colorbar(cont, ax=ax, shrink=0.9)
-clb.set_label('(km)') 
+if (plt_cldht): clb.set_label('(km)') 
+if (plt_lwbt):  clb.set_label('(K)') 
 anim = animation.FuncAnimation(fig, animate,  frames=count-1)
 writer = animation.writers['ffmpeg'](fps=1)
 anim.save(fileOUT+'.mp4',writer=writer,dpi=512)

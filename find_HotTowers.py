@@ -15,14 +15,15 @@ def daterange(start_date, end_date):
 ##########################################################################################
 
 # Set true to make plots cloud-fraction when "hot-towers" are detected.
-mkplot = 1
+mkplot = 0
 
 # Data location (OpenDap)
 dirData = 'https://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clavrx/2km_01min/'
 
 # What data to read in? [year,month,day,hour,minute]
-t_start = [2020,2,9,21,0]
-t_stop  = [2020,2,9,23,58]
+t_start = [2020,1,14,15,40]
+#t_stop  = [2020,1,14,15,45]
+t_stop  = [2020,2,13,23,59]
 
 # Subset the domain? [lon1,lat1,lon2,lat2]
 sub_extent = [-60,15,-58,17]
@@ -31,9 +32,22 @@ sub_extent = [-60,15,-58,17]
 # Here "hot-towers" are defined by a sudden change in the number of pixels with cloud-top
 # height exceeding some threshold.
 # Cloud height threshold
-cld_hgt_thresh   = 6000.
+cld_hgt_thresh   = 4000.
 # Relative change in pixels containing high-clouds.
 changeInPixCount = 0.5
+
+fileOUT = 'hot_towers'       + '_' + \
+    str(t_start[0]).zfill(4) + \
+    str(t_start[1]).zfill(2) + \
+    str(t_start[2]).zfill(2) + \
+    str(t_start[3]).zfill(2) + \
+    str(t_start[4]).zfill(2) + '_' + \
+    str(t_stop[0]).zfill(4)  + \
+    str(t_stop[1]).zfill(2)  + \
+    str(t_stop[2]).zfill(2)  + \
+    str(t_stop[3]).zfill(2)  + \
+    str(t_stop[4]).zfill(2)  + '_' + \
+    str(cld_hgt_thresh/1000.).zfill(2)+'km_dp'+str(changeInPixCount*100.).zfill(2)+'.nc'
 
 ##########################################################################################
 # Determine problem size...
@@ -59,7 +73,6 @@ to1 = datetime.datetime(t_start[0], t_start[1], t_start[2])
 tf1 = datetime.datetime(t_stop[0],  t_stop[1],  t_stop[2])
 nDirsToReadFrom = abs(tf1-to1).days+1
 print('Requested time period spans '+str(nDirsToReadFrom)+' days')
-
     
 ##########################################################################################
 # Create file list
@@ -106,7 +119,7 @@ fileiF = fileList.index(fnameF)
 init  = 1
 count = 0
 for iTime in range(fileiI,fileiF+1):
-    [cld_hgt, cld_temp, cld_pres, lon, lat, error] = \
+    [cld_hgt, cld_temp, cld_pres, lw_clrCh, lon, lat, error] = \
         read_data.read_data(fileList[iTime], sub_extent)
     if not (error):        
         print('      Reading in '+fileList[iTime])
@@ -214,3 +227,24 @@ for iTime in range(fileiI,fileiF+1):
     else:
         # If not, squack
         print('      Missing day: '+fileList[iTime]+' does not exist')
+
+##########################################################################################
+# Create output file
+##########################################################################################
+ncfile = netCDF4.Dataset(fileOUT,'w')
+ncfile.createDimension('nTime',count)
+yearOUT   = ncfile.createVariable('year',       np.dtype('int32').char, ('nTime'))
+monthOUT  = ncfile.createVariable('month',      np.dtype('int32').char, ('nTime'))
+dayOUT    = ncfile.createVariable('day',        np.dtype('int32').char, ('nTime'))
+hourOUT   = ncfile.createVariable('hour',       np.dtype('int32').char, ('nTime'))
+minuteOUT = ncfile.createVariable('minute',     np.dtype('int32').char, ('nTime'))
+npixelOUT = ncfile.createVariable('nPixel',     np.dtype('int32').char, ('nTime'))
+ntotpOUT  = ncfile.createVariable('nTotalPixel',np.dtype('int32').char, ('nTime'))
+yearOUT[:]   = year
+monthOUT[:]  = month
+dayOUT[:]    = day
+hourOUT[:]   = hour
+minuteOUT[:] = minute
+npixelOUT[:] = cfp
+ntotpOUT[:]  = nPts
+ncfile.close()
