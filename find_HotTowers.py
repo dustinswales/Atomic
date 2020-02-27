@@ -22,8 +22,8 @@ dirData = 'https://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clav
 
 # What data to read in? [year,month,day,hour,minute]
 t_start = [2020,1,14,15,40]
-#t_stop  = [2020,1,14,15,45]
-t_stop  = [2020,2,13,23,59]
+t_stop  = [2020,1,14,15,45]
+#t_stop  = [2020,2,13,23,59]
 
 # Subset the domain? [lon1,lat1,lon2,lat2]
 sub_extent = [-60,15,-58,17]
@@ -119,8 +119,9 @@ fileiF = fileList.index(fnameF)
 init  = 1
 count = 0
 for iTime in range(fileiI,fileiF+1):
-    [cld_hgt, cld_temp, cld_pres, lw_clrCh, lon, lat, error] = \
-        read_data.read_data(fileList[iTime], sub_extent)
+    [cld_hgt,  lon, lat, error] = read_data.read_data(fileList[iTime], 'cld_height_acha', sub_extent)
+    [cld_temp, lon, lat, error] = read_data.read_data(fileList[iTime], 'cld_temp_acha',   sub_extent)
+    [cld_pres, lon, lat, error] = read_data.read_data(fileList[iTime], 'cld_press_acha',  sub_extent)
     if not (error):        
         print('      Reading in '+fileList[iTime])
         

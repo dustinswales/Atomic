@@ -3,7 +3,7 @@
 ##########################################################################################
 import netCDF4,numpy as np
 
-def read_data(fileIN, sub_extent):
+def read_data(fileIN, varName, sub_extent):
 
     # Are we only reading in a portion of the domain?
     if (len(sub_extent) == 4):
@@ -47,25 +47,16 @@ def read_data(fileIN, sub_extent):
         lat  = lat[xi0:xi1,yi0:yi1]
             
         # Read in fields
-        var      = dataIN.variables['cld_temp_acha']
-        cld_temp = dataIN.variables['cld_temp_acha'][xi0:xi1,yi0:yi1]        
-        var      = dataIN.variables['cld_height_acha']
-        cld_hgt  = dataIN.variables['cld_height_acha'][xi0:xi1,yi0:yi1]
-        var      = dataIN.variables['cld_press_acha']
-        cld_pres = dataIN.variables['cld_press_acha'][xi0:xi1,yi0:yi1]
-        var      = dataIN.variables['temp_10_4um_nom']
-        lw_clrCh = dataIN.variables['temp_10_4um_nom'][xi0:xi1,yi0:yi1]
+        var    = dataIN.variables[varName]
+        varOUT = dataIN.variables[varName][xi0:xi1,yi0:yi1]        
         error    = 0
     except:
-        cld_hgt  = 0
-        cld_temp = 0
-        cld_pres = 0
-        lon      = 0
-        lat      = 0
-        lw_clrCh = 0
-        error    = 1
+        varOUT = 0
+        lon    = 0
+        lat    = 0
+        error  = 1
     
-    return cld_hgt,cld_temp,cld_pres,lw_clrCh,lon,lat,error
+    return varOUT, lon, lat, error
         
         
 # Check to see if this file is being executed as the "Main" python
