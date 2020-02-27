@@ -14,15 +14,15 @@ def daterange(start_date, end_date):
 ##########################################################################################
 # Animation function
 ##########################################################################################
-def animate(i): 
+def animate(i):
     ax.collections = [] 
-    cont = plt.contourf(lon, lat, cld_hgt2d[:,:,i], levels, cmap='YlGnBu')
+    cont = plt.contourf(lon, lat, cld_hgt2d[:,:,i]/1000., levels, cmap='YlGnBu')
     t1   = datetime.datetime(year[i],month[i],day[i],\
                              hour[i],minute[i])
     ax.set(title=t1, ylabel='latitude',xlabel='longitude')
     return cont
 
-levels = np.arange(0, 15000, 1000)
+levels = np.arange(0, 15, 1)
 
 ##########################################################################################
 # Configuration
@@ -164,8 +164,11 @@ for iTime in range(fileiI,fileiF+1):
         print('      Missing day: '+fileList[iTime]+' does not exist')
 
 # Make plot
-fig = plt.figure()
-ax  = plt.axes()
+fig  = plt.figure()
+ax   = plt.axes()
+cont = plt.contourf(lon, lat, cld_hgt2d[:,:,0], levels, cmap='YlGnBu')
+clb  = fig.colorbar(cont, ax=ax, shrink=0.9)
+clb.set_label('(km)') 
 anim = animation.FuncAnimation(fig, animate,  frames=count-1)
 writer = animation.writers['ffmpeg'](fps=1)
 anim.save(fileOUT+'.mp4',writer=writer,dpi=512)
