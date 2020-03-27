@@ -24,14 +24,14 @@ ftpServer = 'ftp.ssec.wisc.edu'
 dirFTP = '/pub/clavrx/barbados/'
 
 # Which configuration to download?
-configID = '2km_01min'
+configID = '2km_10min'
 
 # Where should the data be stored locally?
 dirLocal = '/Projects/ATOMIC/data/clavrx/'
 
 # What date range to import?
-start_date = date(2020, 1, 24)
-end_date   = date(2020, 1, 26)
+start_date = date(2020, 1, 22)
+end_date   = date(2020, 1, 31)
 
 # Compute day-of-year, used in filenaming convention.
 deltaDays = start_date - date(start_date.year,1,1)
@@ -64,16 +64,16 @@ for single_date in daterange(start_date, end_date):
         ls = ftp.nlst()
         count = len(ls)
         curr = 0
-        print "found {} files".format(count)
+        print('found {} files'.format(count))
         for fn in ls:
             curr += 1
-            print 'Processing file {} ... {} of {} ...'.format(fn, curr, count)
+            print('Processing file {} ... {} of {} ...'.format(fn, curr, count))
             ftp.retrbinary('RETR ' + fn, open(fn, 'wb').write)
     except:
         print("Data missing on FTP site: "+NewTempDir)
         
 ftp.quit()
-print "download complete."
+print("download complete.")
 
     
 ##########################################################################################

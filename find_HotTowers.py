@@ -22,8 +22,8 @@ dirData = 'https://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clav
 
 # What data to read in? [year,month,day,hour,minute]
 t_start = [2020,1,14,15,40]
-t_stop  = [2020,1,14,15,45]
-#t_stop  = [2020,2,13,23,59]
+#t_stop  = [2020,1,14,15,45]
+t_stop  = [2020,2,13,23,59]
 
 # Subset the domain? [lon1,lat1,lon2,lat2]
 sub_extent = [-60,15,-58,17]
