@@ -17,8 +17,8 @@ dirData   = '/Projects/ATOMIC/preliminary/data/clavrx/2km_01min/'
 dirData10 = '/Projects/ATOMIC/preliminary/data/clavrx/2km_10min/'
 
 # What data to read in? [year,month,day,hour,minute]
-t_start = [2020,1,14,0,0]
-t_stop  = [2020,2,16,23,59]
+t_start = [2020,1,14,12,00]
+t_stop  = [2020,2,16,12,00]
 
 # File name format (file_prefix)YYYY_DOY_HHMM(file_suffix) (01-min data)
 file_prefix = 'clavrx_goes16_'
@@ -47,7 +47,7 @@ tf1 = datetime.datetime(t_stop[0],  t_stop[1],  t_stop[2])
 nDirsToReadFrom = abs(tf1-to1).days+1
     
 ##########################################################################################
-# Create file list
+# Create file list of 01-minute data. 
 ##########################################################################################
 fileList = ['' for x in range(nDirsToReadFrom*24*60)]
 yy = np.zeros(nDirsToReadFrom*24*60,dtype=int)
@@ -94,14 +94,36 @@ fnameF = dirF + file_prefix+str(t_stop[0])+'_'+str(doy+countDAY-1).zfill(3)+'_'+
 # Pull out indices for first/last files.
 fileiI = fileList.index(fnameI)
 fileiF = fileList.index(fnameF)
+nTime  = fileiF - fileiI + 1
 
 ##########################################################################################
 # Try to read in field from file, if no file, look for 10min data.
 ##########################################################################################
-count         = 0
-countSubSet   = 0
-countNoSubSet = 0
-countMissing  = 0
+# Create output file
+fileIDout = netCDF4.Dataset('clavrx_01min_10min_domain_status.nc', 'w', format='NETCDF4')
+# Dimensions
+fileIDout.createDimension('time', None)
+# Varaibles
+yearout = fileIDout.createVariable('year', 'int', ('time',))
+yearout.long_name = 'Year'
+monthout = fileIDout.createVariable('month', 'int', ('time',))
+monthout.long_name = 'Month'
+dayout = fileIDout.createVariable('day', 'int', ('time',))
+dayout.long_name = 'Day'
+hourout = fileIDout.createVariable('hour', 'int', ('time',))
+hourout.long_name = 'Hour'
+minuteout = fileIDout.createVariable('minute', 'int', ('time',))
+minuteout.long_name = 'Minute'
+flag01out = fileIDout.createVariable('flag01', 'int', ('time',))
+flag01out.long_name = '01-minute data present?'
+flag02out = fileIDout.createVariable('flag02', 'int', ('time',))
+flag02out.long_name = '10-minute data present?'
+flag03out = fileIDout.createVariable('flag03', 'int', ('time',))
+flag03out.long_name = '01-minute data subsets 10-minute data?'
+
+# Create flags for domain status.
+# Loop over all requested times...
+count = 0
 for iTime in range(fileiI,fileiF+1):
     # Compute day-of-year (doy), used in filenaming convention.
     deltaDays = datetime.date(yy[iTime],mm[iTime],dd[iTime]) - datetime.date(yy[iTime],1,1)
@@ -113,59 +135,49 @@ for iTime in range(fileiI,fileiF+1):
     fileRoot  = dir + '/' + file10_prefix + str(yy[iTime]) + str(doy).zfill(3) + \
         str(hh[iTime]).zfill(2) + str(10*int(np.floor(mmm[iTime]/10))).zfill(2) + file10_suffix
 
+    # Output time information
+    yearout[count]   = yy[iTime]
+    monthout[count]  = mm[iTime]
+    dayout[count]    = dd[iTime]
+    hourout[count]   = hh[iTime]
+    minuteout[count] = mmm[iTime] 
+    
     # Read in 01-minute geo data
-    data01exists = 0
     if (os.path.exists(fileList[iTime])):
         dataIN = netCDF4.Dataset(fileList[iTime],'r')
         lat01  = dataIN.variables['latitude'][:,:]
         lon01  = dataIN.variables['longitude'][:,:]
         nlon01 = len(lon01[:,0])
         nlat01 = len(lat01[0,:])
-        data01exists = 1
+        flag01out[count] = 1
     else:
-        print("01-minute data not found")
-        print(fileList[iTime])
+        flag01out[count] = 0
         
     # Read in 10-minute geo data
-    data10exists = 0
     if (os.path.exists(fileRoot)):
         dataIN2  = netCDF4.Dataset(fileRoot,'r')
         lat10    = dataIN2.variables['latitude'][:,:]
         lon10    = dataIN2.variables['longitude'][:,:]
         nlon10   = len(lon10[:,0])
         nlat10   = len(lat10[0,:])
-        data10exists = 1
+        flag02out[count] = 1
     else:
-        print("10-minute data not found")
-        print(fileRoot)
+        flag02out[count] = 0
+
     # Does 01-minute degree data subset the 10-minute?
-    if (data01exists and data10exists):
+    if (flag01out[count] and flag02out[count]):
         if (np.min(lat01) > np.min(lat10) and \
             np.max(lat01) < np.max(lat10) and \
             np.min(lon01) > np.min(lon10) and \
             np.max(lon01) < np.max(lon10)):
-            print("01-minute data subsets 10-minute data")
-            countSubSet = countSubSet + 1
+            flag03out[count] = 1
         else:
-            print("Mismatch between 10-min and 01-min domains")
-            print("10-degree: ["+str(np.min(lat10))+","+str(np.min(lon10))+","+\
-                                 str(np.max(lat10))+","+str(np.max(lon10))+"]")
-            print(fileRoot)
-            print("01-degree: ["+str(np.min(lat01))+","+str(np.min(lon01))+","+\
-                                 str(np.max(lat01))+","+str(np.max(lon01))+"]")            
-            print(fileList[iTime])
-            countNoSubSet = countNoSubSet + 1
-
+            flag03out[count] = 0
     else:
-        print("WARNING: No 01/10-minute data")
-        print(fileList[iTime])
-        countMissing = countMissing + 1
-
+        flag03out[count] = -1
+            
+    # Increment counter
     count = count + 1
 
-
-print("############################################################################################")
-print("############################################################################################")
-print("Domains agree:    "+str(100.*countSubSet/count).zfill(2))
-print("Domains disagree: "+str(100.*countNoSubSet/count).zfill(2))
-print("Missing data:     "+str(100.*countMissing/count).zfill(2))
+# Close file
+fileIDout.close()
