@@ -4,6 +4,8 @@ import read_data
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
+# This is my local installation of ffmpeg (conda install -p /home/dswales/tools/anaconda3 -c conda-forge ffmpeg)
+plt.rcParams['animation.ffmpeg_path'] = '/home/dswales/tools/anaconda3/bin/ffmpeg'
 
 ##########################################################################################
 ##########################################################################################
@@ -29,9 +31,6 @@ def animate(i):
 varName = 'cld_height_acha'
 units   = 'm'
 levels  = np.arange(0, 15000, 1000)
-#varName = 'temp_10_4um_nom'
-#units   = 'K'
-#levels  = np.arange(200,340, 10)
 
 # Data location (OpenDap)
 dirData = 'http://psl.noaa.gov/thredds/dodsC/Datasets/ATOMIC/preliminary/data/clavrx/2km_01min/'
@@ -44,8 +43,11 @@ t_stop  = [2020,1,18,13,10]
 sub_extent = [-60,15,-58,17]
 #sub_extent = [] #Using the full domain.
 
-# Name for output file
-fileOUT = 'hot_towers'       + '_'+ varName + '_' + \
+# For the output movie, define the FramesPerSecond (fps)
+fps_movieOutFile = 4
+
+# Name for output file (varName_YYYYMMDDHHmm_YYYYMMDDHHmm.mp4)
+fileOUT = varName + '_' + \
     str(t_start[0]).zfill(4) + \
     str(t_start[1]).zfill(2) + \
     str(t_start[2]).zfill(2) + \
@@ -56,7 +58,7 @@ fileOUT = 'hot_towers'       + '_'+ varName + '_' + \
     str(t_stop[2]).zfill(2)  + \
     str(t_stop[3]).zfill(2)  + \
     str(t_stop[4]).zfill(2)
-print(fileOUT)
+
 ##########################################################################################
 # Determine problem size...
 ##########################################################################################
@@ -167,13 +169,13 @@ for iTime in range(fileiI,fileiF+1):
         # If not, squack
         print('      Missing day: '+fileList[iTime]+' does not exist')
 
-# Make plot
-#fig  = plt.figure()
-#ax   = plt.axes()
-#cont = plt.contourf(lon, lat, var,  levels, cmap='YlGnBu')
-#clb  = fig.colorbar(cont, ax=ax, shrink=0.9)
-#clb.set_label('('+units+')') 
-#plt.show()
-#anim = animation.FuncAnimation(fig, animate,  frames=count-1)
-#writer = animation.writers['ffmpeg'](fps=1)
-#anim.save(fileOUT+'.mp4',writer=writer,dpi=512)
+# Make movie.
+fig  = plt.figure()
+ax   = plt.axes()
+cont = plt.contourf(lon, lat, var,  levels, cmap='YlGnBu')
+clb  = fig.colorbar(cont, ax=ax, shrink=0.9)
+clb.set_label('('+units+')') 
+anim = animation.FuncAnimation(fig, animate,  frames=count-1)
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=fps_movieOutFile)
+anim.save(fileOUT+'.mp4',writer=writer)
