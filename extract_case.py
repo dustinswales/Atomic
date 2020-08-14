@@ -34,11 +34,11 @@ levels  = np.arange(0, 15000, 1000)
 #levels  = np.arange(200,340, 10)
 
 # Data location (OpenDap)
-dirData = 'https://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ATOMIC/data/clavrx/2km_01min/'
+dirData = 'http://psl.noaa.gov/thredds/dodsC/Datasets/ATOMIC/preliminary/data/clavrx/2km_01min/'
 
 # What data to read in? [year,month,day,hour,minute]
-t_start = [2020,2,9,21,0]
-t_stop  = [2020,2,9,21,5]
+t_start = [2020,1,18,13,0]
+t_stop  = [2020,1,18,13,10]
 
 # Subset the domain? [lon1,lat1,lon2,lat2]
 sub_extent = [-60,15,-58,17]
@@ -56,7 +56,7 @@ fileOUT = 'hot_towers'       + '_'+ varName + '_' + \
     str(t_stop[2]).zfill(2)  + \
     str(t_stop[3]).zfill(2)  + \
     str(t_stop[4]).zfill(2)
-
+print(fileOUT)
 ##########################################################################################
 # Determine problem size...
 ##########################################################################################
@@ -168,11 +168,12 @@ for iTime in range(fileiI,fileiF+1):
         print('      Missing day: '+fileList[iTime]+' does not exist')
 
 # Make plot
-fig  = plt.figure()
-ax   = plt.axes()
-cont = plt.contourf(lon, lat, var,  levels, cmap='YlGnBu')
-clb  = fig.colorbar(cont, ax=ax, shrink=0.9)
-clb.set_label('('+units+')') 
-anim = animation.FuncAnimation(fig, animate,  frames=count-1)
-writer = animation.writers['ffmpeg'](fps=1)
-anim.save(fileOUT+'.mp4',writer=writer,dpi=512)
+#fig  = plt.figure()
+#ax   = plt.axes()
+#cont = plt.contourf(lon, lat, var,  levels, cmap='YlGnBu')
+#clb  = fig.colorbar(cont, ax=ax, shrink=0.9)
+#clb.set_label('('+units+')') 
+#plt.show()
+#anim = animation.FuncAnimation(fig, animate,  frames=count-1)
+#writer = animation.writers['ffmpeg'](fps=1)
+#anim.save(fileOUT+'.mp4',writer=writer,dpi=512)
